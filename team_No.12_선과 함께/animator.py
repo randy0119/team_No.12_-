@@ -9,12 +9,15 @@ class Animator(Timer):
         self.scene=now_scene
 
     def onTimeout(self):
-        self.scene.setLight(self.schedule[self.counter])
-        self.counter+=1
-        if self.reservation[self.counter][0]!=0:    
-            self.reservation[self.counter][1].start()
-        self.set(0.1)
-        self.start()
+        if self.counter<3000:
+            self.scene.setLight(self.schedule[self.counter])
+            self.counter+=1
+            if self.reservation[self.counter][0]!=0:    
+                self.reservation[self.counter][1].start()
+            self.set(0.1)
+            self.start()
+        else:
+            self.scene.setLight(1)
 
     def light_on(self, start, lenth):
         for i in range(int(lenth*10)):
