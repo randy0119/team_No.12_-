@@ -69,7 +69,7 @@ class Character(Object):
             if self.control==True:
                 self.location[0].player_location[0]=self.location[1]
                 self.location[0].player_location[1]=self.location[2]
-                exam.set(self.location[2])##______________________test 추후 삭제 요망
+                exam.set(self.location[1])##______________________test 추후 삭제 요망
             character_locate(self)
 
             self.motion_timer.set(0.03)
@@ -244,7 +244,7 @@ class Stage(Scene):
             return False
 
     def hit_signal(self, x, y, dir):
-        hit=[[x+(-1)*(100-(50*dir)) , x+dir*100], [y, y+100]]
+        hit=[[x+(-1)*(150-(50*dir)) , x+(100+100*dir)], [y-50, y+100]]
         for mob in self.mob_list:
             if mob.location[1]>=hit[0][0] and mob.location[1]<=hit[0][1] and mob.location[2]>=hit[1][0] and mob.location[2]<=hit[1][1]:
                 mob.hit_signal()
@@ -402,9 +402,6 @@ class Mob(Object):
         self.on_hit=True
         self.on_hit_timer.start()
 
-    def onMouseAction(self, x, y, action):
-        self.hit_signal()
-
 
 
 ###________________________________________________________________________________________인트로
@@ -465,6 +462,10 @@ def hellgate_1_ground(x, y):
 hellgate_1=Stage("지옥문", "지옥문/1.png", hellgate_1_ground, 1137, 760-510, 0, 0)
 hellgate_1_animator=Animator(hellgate_1)
 hellgate_1_message=Message(hellgate_1, hellgate_1_animator, ["지옥문/대화 0.png", "지옥문/대화 1.png", "지옥문/대화 2.png","지옥문/대화 3.png","지옥문/대화 4.png","지옥문/대화 5.png","지옥문/대화 6.png", "지옥문/귀인이요.png", "end"])
+how_to_portal=Object("지옥문/방향키.png")
+how_to_portal.locate(hellgate_1, 1175, 420)
+how_to_portal.setScale(0.5)
+how_to_portal.show()
 
 leading_roll=Character(leading_roll_file_set, hellgate_1, 210, 135, 0, 0, 0, True, True)
 deoksoon=Character(deoksoon_file_set, hellgate_1, -100, 135, 0, 0, 0, True, False)
@@ -498,7 +499,7 @@ def input_key(character, key):
     character.key=key
 
 exam=Timer(key)
-showTimer(exam)##______________________test 추후 삭제 요망
+#showTimer(exam)##______________________test 추후 삭제 요망
 
 
 hellgate_1_timeline=Timer(0)
@@ -532,7 +533,7 @@ def hellgate_1_timeline_next():
     elif hellgate_1_timeline_count==8:
         hellgate_1_message.show()
         hellgate_1_animator.stop()
-        showMessage("이동: 방향키\n점프: alt\n다음 장소로 이동해주세요")
+        showMessage("이동: 방향키    점프: alt\n대화창 이동: 마우스 드래그    포탈: 위쪽 방향키\n다음 장소로 이동해주세요")
         on_event=False
         hellgate_1.clear=True
 
@@ -703,8 +704,11 @@ def cr1_timeline_next():
     elif cr1_timeline_count==5:
         for mob in cheonryun_1.mob_list:
             mob.control=True
+        for self in [haewonmaek, deoksoon, leading_roll]:
+            self.hide()
         on_event=False
         control(gangrim)
+        showMessage("필드 내 모든 악귀를 해치우세요\n공격: Ctrl")
     cr1_timeline_count+=1    
 cr1_timeline.onTimeout=cr1_timeline_next
 
@@ -788,7 +792,7 @@ sf_11=Mob(stormfox_file_set, cheonryun_3, 800, 380, 1015, 585, 0, True, True)
 
 cheonryun_3.rope_location.append([370, 60, 270])
 cheonryun_3.rope_location.append([725, 60, 380])
-#cheonryun_3.rope_location.append([200, 270, 760])
+cheonryun_3.rope_location.append([200, 270, 760])
 
 def cr3_onEnter():
     global on_event
@@ -998,6 +1002,8 @@ def md1_timeline_next():
     elif md1_timeline_count==5:
         for mob in md1.mob_list:
             mob.control=True
+        for self in [gangrim, deoksoon, leading_roll]:
+            self.shown=False
         on_event=False
         control(haewonmaek)
     md1_timeline_count+=1    
@@ -1093,11 +1099,11 @@ md3.rope_location.append([480, 140, 310])
 md3.rope_location.append([535, 320, 505])
 md3.rope_location.append([235, 330, 620])
 
-def_9=Mob(def_file_set, md3, 450, 130, 1200, 50, 0, True, True)
-def_10=Mob(def_file_set, md3, 850, 130, 1200, 50, 0, True, True)
-def_11=Mob(def_file_set, md3, 300, 310, 1030, 100, 0, True, True)
-def_12=Mob(def_file_set, md3, 700, 310, 1030, 100, 0, True, True)
-def_13=Mob(def_file_set, md3, 500, 505, 765, 255, 0, True, True)
+atk_1=Mob(atk_file_set, md3, 450, 130, 1200, 50, 0, True, True)
+atk_2=Mob(atk_file_set, md3, 850, 130, 1200, 50, 0, True, True)
+atk_3=Mob(atk_file_set, md3, 300, 310, 1030, 100, 0, True, True)
+atk_4=Mob(atk_file_set, md3, 700, 310, 1030, 100, 0, True, True)
+atk_5=Mob(atk_file_set, md3, 500, 505, 765, 255, 0, True, True)
 
 def md3_onEnter():
     global on_event
@@ -1159,6 +1165,7 @@ def md4_timeline_next():
     md4_timeline_count+=1    
 md4_timeline.onTimeout=md4_timeline_next
 
+md4_animator.fade_in(0, 1)
 md4_animator.reserve(0, md4_timeline)
 md4_animator.reserve(2, md4_timeline)
 md4_animator.reserve(3, md4_timeline)
@@ -1190,5 +1197,434 @@ def md4_onEnter():
         input_key(leading_roll, 85)
         md4_animator.start()
 md4.self_set=md4_onEnter
+###________________________________________________________________________________________살인지옥4/거짓지옥1
+class Boss(Mob):
+    def __init__(self, file_set, scene, x, y, right_lim, left_lim, dir, shown, control):
+        super().__init__(file_set, scene, x, y, right_lim, left_lim, dir, shown, control)
+
+        self.life=15
+
+        def death():
+            if self.death_count<59:
+                self.state[0]=2
+                self.state[2]=self.death_count
+                self.death_count+=1
+                self.death_timer.set(0.2)
+                self.death_timer.start()
+            else:
+                self.shown=False
+                self.location[0].clear==True
+        self.death_timer.onTimeout=death
+
+        self.motion_timer=Timer(0.03)
+        self.motion_count=0
+        def motion_timer_onTimeout():
+            self.motion_count+=1
+            if not self.on_death:
+                if self.control and not self.on_hit:
+                    self.rullet_timer.start()
+                    if self.key==1: 
+                        self.move_right()
+                    elif self.key==2:
+                        self.move_left()
+                    else:
+                        self.stand()
+                else:
+                    self.stand()
+
+                if self.on_hit and self.shown:
+                    self.hit()
+
+                if self.life==0:
+                    self.death_timer.start()
+                    self.location[0].kill_count+=1
+                    self.location[2]-=30
+                    self.on_hit=False
+                    self.on_death=True
+
+            character_locate(self)
+            self.motion_timer.set(0.03)
+            self.motion_timer.start()
+        self.motion_timer.onTimeout=motion_timer_onTimeout
+        self.motion_timer.start()
+
+        def character_locate(self):
+            self.setImage(self.images[self.state[0]][self.state[1]][self.state[2]])
+            self.setScale(0.7)
+            self.locate(self.location[0], self.location[1], self.location[2])
+            if self.shown:
+                self.show()
+            else:
+                self.hide()
+
+    def stand(self):
+        self.state[0]=0
+        self.state[2]=int(self.motion_count%96/4)
+
+    def move_right(self):
+        self.state[0]=3
+        self.state[1]=1
+        self.state[2]=int(self.motion_count%40/4)
+        if self.location[1]+self.x_speed<self.right_limit:
+            self.location[1]+=self.x_speed
+
+    def move_left(self):
+        self.state[0]=3
+        self.state[1]=0
+        self.state[2]=int(self.motion_count%40/4)
+        if self.location[1]-self.x_speed>self.left_limit:
+            self.location[1]-=self.x_speed
+
+    def hit_signal(self):
+        if self.state[0]==0:
+            self.life-=1
+            self.on_hit=True
+            self.on_hit_timer.start()
+bellum_file_set=[[['몹/벨룸/디폴트/좌/Frame0.png', '몹/벨룸/디폴트/좌/Frame1.png', '몹/벨룸/디폴트/좌/Frame2.png', '몹/벨룸/디폴트/좌/Frame3.png', '몹/벨룸/디폴트/좌/Frame4.png', '몹/벨룸/디폴트/좌/Frame5.png', '몹/벨룸/디폴트/좌/Frame6.png', '몹/벨룸/디폴트/좌/Frame7.png', '몹/벨룸/디폴트/좌/Frame8.png', '몹/벨룸/디폴트/좌/Frame9.png', '몹/벨룸/디폴트/좌/Frame10.png', '몹/벨룸/디폴트/좌/Frame11.png', '몹/벨룸/디폴트/좌/Frame12.png', '몹/벨룸/디폴트/좌/Frame13.png', '몹/벨룸/디폴트/좌/Frame14.png', '몹/벨룸/디폴트/좌/Frame15.png', '몹/벨룸/디폴트/좌/Frame16.png', '몹/벨룸/디폴트/좌/Frame17.png', '몹/벨룸/디폴트/좌/Frame18.png', '몹/벨룸/디폴트/좌/Frame19.png', '몹/벨룸/디폴트/좌/Frame20.png', '몹/벨룸/디폴트/좌/Frame21.png', '몹/벨룸/디폴트/좌/Frame22.png', '몹/벨룸/디폴트/좌/Frame23.png'],['몹/벨룸/디폴트/우/Frame0.png', '몹/벨룸/디폴트/우/Frame1.png', '몹/벨룸/디폴트/우/Frame2.png', '몹/벨룸/디폴트/우/Frame3.png', '몹/벨룸/디폴트/우/Frame4.png', '몹/벨룸/디폴트/우/Frame5.png', '몹/벨룸/디폴트/우/Frame6.png', '몹/벨룸/디폴트/우/Frame7.png', '몹/벨룸/디폴트/우/Frame8.png', '몹/벨룸/디폴트/우/Frame9.png', '몹/벨룸/디폴트/우/Frame10.png', '몹/벨룸/디폴트/우/Frame11.png', '몹/벨룸/디폴트/우/Frame12.png', '몹/벨룸/디폴트/우/Frame13.png', '몹/벨룸/디폴트/우/Frame14.png', '몹/벨룸/디폴트/우/Frame15.png', '몹/벨룸/디폴트/우/Frame16.png', '몹/벨룸/디폴트/우/Frame17.png', '몹/벨룸/디폴트/우/Frame18.png', '몹/벨룸/디폴트/우/Frame19.png', '몹/벨룸/디폴트/우/Frame20.png', '몹/벨룸/디폴트/우/Frame21.png', '몹/벨룸/디폴트/우/Frame22.png', '몹/벨룸/디폴트/우/Frame23.png']],[['몹/벨룸/맞음/좌/hit.png'],['몹/벨룸/맞음/우/hit.png']],[['몹/벨룸/죽음/좌/Frame0.png', '몹/벨룸/죽음/좌/Frame1.png', '몹/벨룸/죽음/좌/Frame2.png', '몹/벨룸/죽음/좌/Frame3.png', '몹/벨룸/죽음/좌/Frame4.png', '몹/벨룸/죽음/좌/Frame5.png', '몹/벨룸/죽음/좌/Frame6.png', '몹/벨룸/죽음/좌/Frame7.png', '몹/벨룸/죽음/좌/Frame8.png', '몹/벨룸/죽음/좌/Frame9.png', '몹/벨룸/죽음/좌/Frame10.png', '몹/벨룸/죽음/좌/Frame11.png', '몹/벨룸/죽음/좌/Frame12.png', '몹/벨룸/죽음/좌/Frame13.png', '몹/벨룸/죽음/좌/Frame14.png', '몹/벨룸/죽음/좌/Frame15.png', '몹/벨룸/죽음/좌/Frame16.png', '몹/벨룸/죽음/좌/Frame17.png', '몹/벨룸/죽음/좌/Frame18.png', '몹/벨룸/죽음/좌/Frame19.png', '몹/벨룸/죽음/좌/Frame20.png', '몹/벨룸/죽음/좌/Frame21.png', '몹/벨룸/죽음/좌/Frame22.png', '몹/벨룸/죽음/좌/Frame23.png', '몹/벨룸/죽음/좌/Frame24.png', '몹/벨룸/죽음/좌/Frame25.png', '몹/벨룸/죽음/좌/Frame26.png', '몹/벨룸/죽음/좌/Frame27.png', '몹/벨룸/죽음/좌/Frame28.png', '몹/벨룸/죽음/좌/Frame29.png', '몹/벨룸/죽음/좌/Frame30.png', '몹/벨룸/죽음/좌/Frame31.png', '몹/벨룸/죽음/좌/Frame32.png', '몹/벨룸/죽음/좌/Frame33.png', '몹/벨룸/죽음/좌/Frame34.png', '몹/벨룸/죽음/좌/Frame35.png', '몹/벨룸/죽음/좌/Frame36.png', '몹/벨룸/죽음/좌/Frame37.png', '몹/벨룸/죽음/좌/Frame38.png', '몹/벨룸/죽음/좌/Frame39.png', '몹/벨룸/죽음/좌/Frame40.png', '몹/벨룸/죽음/좌/Frame41.png', '몹/벨룸/죽음/좌/Frame42.png', '몹/벨룸/죽음/좌/Frame43.png', '몹/벨룸/죽음/좌/Frame44.png', '몹/벨룸/죽음/좌/Frame45.png', '몹/벨룸/죽음/좌/Frame46.png', '몹/벨룸/죽음/좌/Frame47.png', '몹/벨룸/죽음/좌/Frame48.png', '몹/벨룸/죽음/좌/Frame49.png', '몹/벨룸/죽음/좌/Frame50.png', '몹/벨룸/죽음/좌/Frame51.png', '몹/벨룸/죽음/좌/Frame52.png', '몹/벨룸/죽음/좌/Frame53.png', '몹/벨룸/죽음/좌/Frame54.png', '몹/벨룸/죽음/좌/Frame55.png', '몹/벨룸/죽음/좌/Frame56.png', '몹/벨룸/죽음/좌/Frame57.png', '몹/벨룸/죽음/좌/Frame58.png'],['몹/벨룸/죽음/우/Frame0.png', '몹/벨룸/죽음/우/Frame1.png', '몹/벨룸/죽음/우/Frame2.png', '몹/벨룸/죽음/우/Frame3.png', '몹/벨룸/죽음/우/Frame4.png', '몹/벨룸/죽음/우/Frame5.png', '몹/벨룸/죽음/우/Frame6.png', '몹/벨룸/죽음/우/Frame7.png', '몹/벨룸/죽음/우/Frame8.png', '몹/벨룸/죽음/우/Frame9.png', '몹/벨룸/죽음/우/Frame10.png', '몹/벨룸/죽음/우/Frame11.png', '몹/벨룸/죽음/우/Frame12.png', '몹/벨룸/죽음/우/Frame13.png', '몹/벨룸/죽음/우/Frame14.png', '몹/벨룸/죽음/우/Frame15.png', '몹/벨룸/죽음/우/Frame16.png', '몹/벨룸/죽음/우/Frame17.png', '몹/벨룸/죽음/우/Frame18.png', '몹/벨룸/죽음/우/Frame19.png', '몹/벨룸/죽음/우/Frame20.png', '몹/벨룸/죽음/우/Frame21.png', '몹/벨룸/죽음/우/Frame22.png', '몹/벨룸/죽음/우/Frame23.png', '몹/벨룸/죽음/우/Frame24.png', '몹/벨룸/죽음/우/Frame25.png', '몹/벨룸/죽음/우/Frame26.png', '몹/벨룸/죽음/우/Frame27.png', '몹/벨룸/죽음/우/Frame28.png', '몹/벨룸/죽음/우/Frame29.png', '몹/벨룸/죽음/우/Frame30.png', '몹/벨룸/죽음/우/Frame31.png', '몹/벨룸/죽음/우/Frame32.png', '몹/벨룸/죽음/우/Frame33.png', '몹/벨룸/죽음/우/Frame34.png', '몹/벨룸/죽음/우/Frame35.png', '몹/벨룸/죽음/우/Frame36.png', '몹/벨룸/죽음/우/Frame37.png', '몹/벨룸/죽음/우/Frame38.png', '몹/벨룸/죽음/우/Frame39.png', '몹/벨룸/죽음/우/Frame40.png', '몹/벨룸/죽음/우/Frame41.png', '몹/벨룸/죽음/우/Frame42.png', '몹/벨룸/죽음/우/Frame43.png', '몹/벨룸/죽음/우/Frame44.png', '몹/벨룸/죽음/우/Frame45.png', '몹/벨룸/죽음/우/Frame46.png', '몹/벨룸/죽음/우/Frame47.png', '몹/벨룸/죽음/우/Frame48.png', '몹/벨룸/죽음/우/Frame49.png', '몹/벨룸/죽음/우/Frame50.png', '몹/벨룸/죽음/우/Frame51.png', '몹/벨룸/죽음/우/Frame52.png', '몹/벨룸/죽음/우/Frame53.png', '몹/벨룸/죽음/우/Frame54.png', '몹/벨룸/죽음/우/Frame55.png', '몹/벨룸/죽음/우/Frame56.png', '몹/벨룸/죽음/우/Frame57.png', '몹/벨룸/죽음/우/Frame58.png']],[['몹/벨룸/이동/우/Frame0.png', '몹/벨룸/이동/우/Frame1.png', '몹/벨룸/이동/우/Frame2.png', '몹/벨룸/이동/우/Frame3.png', '몹/벨룸/이동/우/Frame4.png', '몹/벨룸/이동/우/Frame5.png', '몹/벨룸/이동/우/Frame6.png', '몹/벨룸/이동/우/Frame7.png', '몹/벨룸/이동/우/Frame8.png', '몹/벨룸/이동/우/Frame9.png'],['몹/벨룸/이동/좌/Frame0.png', '몹/벨룸/이동/좌/Frame1.png', '몹/벨룸/이동/좌/Frame2.png', '몹/벨룸/이동/좌/Frame3.png', '몹/벨룸/이동/좌/Frame4.png', '몹/벨룸/이동/좌/Frame5.png', '몹/벨룸/이동/좌/Frame6.png', '몹/벨룸/이동/좌/Frame7.png', '몹/벨룸/이동/좌/Frame8.png', '몹/벨룸/이동/좌/Frame9.png']],[['몹/벨룸/등장/좌/Frame0.png', '몹/벨룸/등장/좌/Frame1.png', '몹/벨룸/등장/좌/Frame2.png', '몹/벨룸/등장/좌/Frame3.png', '몹/벨룸/등장/좌/Frame4.png', '몹/벨룸/등장/좌/Frame5.png', '몹/벨룸/등장/좌/Frame6.png', '몹/벨룸/등장/좌/Frame7.png', '몹/벨룸/등장/좌/Frame8.png', '몹/벨룸/등장/좌/Frame9.png', '몹/벨룸/등장/좌/Frame10.png', '몹/벨룸/등장/좌/Frame11.png', '몹/벨룸/등장/좌/Frame12.png', '몹/벨룸/등장/좌/Frame13.png', '몹/벨룸/등장/좌/Frame14.png', '몹/벨룸/등장/좌/Frame15.png', '몹/벨룸/등장/좌/Frame16.png', '몹/벨룸/등장/좌/Frame17.png', '몹/벨룸/등장/좌/Frame18.png', '몹/벨룸/등장/좌/Frame19.png', '몹/벨룸/등장/좌/Frame20.png'],['몹/벨룸/등장/우/Frame0.png', '몹/벨룸/등장/우/Frame1.png', '몹/벨룸/등장/우/Frame2.png', '몹/벨룸/등장/우/Frame3.png', '몹/벨룸/등장/우/Frame4.png', '몹/벨룸/등장/우/Frame5.png', '몹/벨룸/등장/우/Frame6.png', '몹/벨룸/등장/우/Frame7.png', '몹/벨룸/등장/우/Frame8.png', '몹/벨룸/등장/우/Frame9.png', '몹/벨룸/등장/우/Frame10.png', '몹/벨룸/등장/우/Frame11.png', '몹/벨룸/등장/우/Frame12.png', '몹/벨룸/등장/우/Frame13.png', '몹/벨룸/등장/우/Frame14.png', '몹/벨룸/등장/우/Frame15.png', '몹/벨룸/등장/우/Frame16.png', '몹/벨룸/등장/우/Frame17.png', '몹/벨룸/등장/우/Frame18.png', '몹/벨룸/등장/우/Frame19.png', '몹/벨룸/등장/우/Frame20.png']],[['몹/벨룸/숨기/좌/Frame21.png', '몹/벨룸/숨기/좌/Frame22.png', '몹/벨룸/숨기/좌/Frame23.png', '몹/벨룸/숨기/좌/Frame24.png', '몹/벨룸/숨기/좌/Frame25.png', '몹/벨룸/숨기/좌/Frame26.png', '몹/벨룸/숨기/좌/Frame27.png', '몹/벨룸/숨기/좌/Frame28.png', '몹/벨룸/숨기/좌/Frame29.png', '몹/벨룸/숨기/좌/Frame30.png', '몹/벨룸/숨기/좌/Frame31.png', '몹/벨룸/숨기/좌/Frame32.png'],['몹/벨룸/숨기/우/Frame21.png', '몹/벨룸/숨기/우/Frame22.png', '몹/벨룸/숨기/우/Frame23.png', '몹/벨룸/숨기/우/Frame24.png', '몹/벨룸/숨기/우/Frame25.png', '몹/벨룸/숨기/우/Frame26.png', '몹/벨룸/숨기/우/Frame27.png', '몹/벨룸/숨기/우/Frame28.png', '몹/벨룸/숨기/우/Frame29.png', '몹/벨룸/숨기/우/Frame30.png', '몹/벨룸/숨기/우/Frame31.png', '몹/벨룸/숨기/우/Frame32.png']]]
+
+class BossStage(Stage):
+    def __init__(self, title, image, ground, next_x, next_y, before_x, before_y):
+        super().__init__(title, image, ground, next_x, next_y, before_x, before_y)
+
+    def hit_signal(self, x, y, dir):
+        hit=[[x+(-1)*(200-(150*dir)) , x+dir*200], [y-50, y+100]]
+        for mob in self.mob_list:
+            if mob.location[1]+200>=hit[0][0] and mob.location[1]+200<=hit[0][1] and mob.location[2]>=hit[1][0] and mob.location[2]<=hit[1][1]:
+                mob.hit_signal()
+
+def lh1_ground(x, y):
+        return 120
+
+lh1=BossStage("거짓지옥", "거짓지옥/스테이지 0.png", lh1_ground, 1110, 100, 40, 100)
+md4.next_scene=lh1
+lh1.before_scene=md4
+lh1_animator=Animator(lh1)
+lh1_message=Message(lh1, lh1_animator, ["거짓지옥/대화 1.png", "거짓지옥/대화 2.png",  "거짓지옥/대화 3.png", "거짓지옥/대화 4.png", "거짓지옥/대화 5.png","거짓지옥/대화 6.png","거짓지옥/대화 7.png","거짓지옥/대화 8.png", "end"])
+bellum=Boss(bellum_file_set, lh1, 800, 110, 1000, 0, 0, False, False)
+
+lh1_timeline=Timer(0)
+lh1_timeline_count=0
+def lh1_timeline_next():
+    global lh1_animator
+    global lh1_timeline_count
+    global on_event
+
+    if lh1_timeline_count==0:
+        for self in [deoksoon, gangrim, leading_roll, haewonmaek]:
+            input_key(self, 83)
+
+    elif lh1_timeline_count==1:
+        gangrim.state[2]=0
+        deoksoon.state[2]=0
+        for self in [gangrim, leading_roll, haewonmaek, deoksoon]:
+            input_key(self, 0)
+        lh1_message.show()
+        lh1_animator.stop()
+        
+    elif lh1_timeline_count<=3:
+        lh1_message.show()
+        lh1_animator.stop()
+    
+    elif lh1_timeline_count==4:
+        gangrim.state[2]=0
+        lh1_message.show()
+        lh1_animator.stop()
+
+    elif lh1_timeline_count==5:
+        gangrim.state[2]=1
+        deoksoon.state[2]=1
+        lh1_message.show()
+        lh1_animator.stop()
+
+    elif lh1_timeline_count==6:
+        input_key(leading_roll, 219)
+        bellum.shown=True
+        lh1_message.show()
+        lh1_animator.stop()
+
+    elif lh1_timeline_count==7:
+        input_key(leading_roll, 0)
+        deoksoon.state[2]=0
+        lh1_message.show()
+        lh1_animator.stop()
+
+    elif lh1_timeline_count==8:
+        gangrim.state[2]=0
+        lh1_message.show()
+        lh1_animator.stop()
+
+    elif lh1_timeline_count==9:
+        for self in [leading_roll, haewonmaek, deoksoon]:
+            self.shown=False
+        for mob in lh1.mob_list:
+            mob.control=True
+        on_event=False
+        control(gangrim)
+    lh1_timeline_count+=1    
+lh1_timeline.onTimeout=lh1_timeline_next
+
+lh1_animator.reserve(0, lh1_timeline)
+lh1_animator.reserve(4, lh1_timeline)
+lh1_animator.reserve(5, lh1_timeline)
+lh1_animator.reserve(6, lh1_timeline)
+lh1_animator.reserve(7, lh1_timeline)
+lh1_animator.reserve(8, lh1_timeline)
+lh1_animator.reserve(9, lh1_timeline)
+lh1_animator.reserve(10, lh1_timeline)
+lh1_animator.reserve(11, lh1_timeline)
+lh1_animator.reserve(12, lh1_timeline)
+
+def lh1_onEnter():
+    global on_event
+
+    character_enter(lh1)
+    if not lh1.clear:
+        on_event=True
+        lh1.kill_quest=1
+        deoksoon.location[1]=-80
+        gangrim.location[1]=-150
+        leading_roll.location[1]=-220
+        haewonmaek.location[1]=-290
+        for self in [deoksoon, gangrim, leading_roll, haewonmaek]:
+            self.location[0]=lh1
+            self.location[2]=120
+            self.state[2]=1
+            self.shown=True
+            self.show()
+        lh1_animator.start()
+lh1.self_set=lh1_onEnter
+###________________________________________________________________________________________거짓지옥1/거짓지옥2
+def lh2_ground(x, y):
+    if x<300:
+        return 150
+    elif x>700 and y>170:
+        return 180
+    else:
+        return 60
+
+lh2_message_file=['거짓지옥/재판/대화0.png', '거짓지옥/재판/대화1.png', '거짓지옥/재판/대화2.png', '거짓지옥/재판/대화3.png', '거짓지옥/재판/대화4.png', '거짓지옥/재판/대화5.png', '거짓지옥/재판/대화6.png', '거짓지옥/재판/대화7.png', '거짓지옥/재판/대화8.png', '거짓지옥/재판/대화9.png', '거짓지옥/재판/대화10.png', '거짓지옥/재판/대화11.png', '거짓지옥/재판/대화12.png', '거짓지옥/재판/대화13.png', '거짓지옥/재판/대화14.png', '거짓지옥/재판/대화15.png', '거짓지옥/재판/대화16.png', '거짓지옥/재판/대화17.png', '거짓지옥/재판/대화18.png', '거짓지옥/재판/대화19.png', '거짓지옥/재판/대화20.png', '거짓지옥/재판/대화21.png', '거짓지옥/재판/대화22.png', '거짓지옥/재판/대화23.png', '거짓지옥/재판/대화24.png', '거짓지옥/재판/대화25.png', '거짓지옥/재판/대화26.png', '거짓지옥/재판/대화27.png', '거짓지옥/재판/대화28.png', '거짓지옥/재판/대화29.png', '거짓지옥/재판/대화30.png', '거짓지옥/재판/대화31.png', '거짓지옥/재판/대화32.png', '거짓지옥/재판/대화33.png', '거짓지옥/재판/대화34.png', '거짓지옥/재판/대화35.png', 'end']
+lh2=Stage("거짓지옥", "거짓지옥/배경1.png", lh2_ground, -1110, 100, 40, -800)
+lh1.next_scene=lh2
+lh2.before_scene=lh1
+lh2_animator=Animator(lh2)
+
+taesan=Object("캐릭터/태산대왕/좌.png")
+taesan.locate(lh2, 600, 370)
+taesan.show()
+mom=Object("캐릭터/엄마/엄마.png")
+mom.locate(lh2, 970, 60)
+
+knife=Object("캐릭터/스며드는 공포/Frame0.png")
+knife.locate(lh2, 400, 60)
+knife_timer=Timer(0)
+knife_count=0
+knife_file=['캐릭터/스며드는 공포/Frame0.png', '캐릭터/스며드는 공포/Frame1.png', '캐릭터/스며드는 공포/Frame2.png', '캐릭터/스며드는 공포/Frame3.png', '캐릭터/스며드는 공포/Frame4.png', '캐릭터/스며드는 공포/Frame5.png']
+def knife_ontime():
+    global knife_count
+    knife_count+=1
+    knife.setImage(knife_file[knife_count%6])
+    knife.show()
+    knife_timer.set(0.2)
+    knife_timer.start()
+knife_timer.onTimeout=knife_ontime
+
+
+lh2_message=Message(lh2, lh2_animator, lh2_message_file)
+
+lh2_timeline=Timer(0)
+lh2_timeline_count=0
+def lh2_timeline_next():
+    global lh2_animator
+    global lh2_timeline_count
+    global on_event
+
+    if lh2_timeline_count<=2:
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==3:
+        input_key(gangrim, 83)
+
+    elif lh2_timeline_count==4:
+        input_key(gangrim, 0)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count<=6:
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==7:
+        knife_timer.start()
+        input_key(leading_roll, 219)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==9:
+        knife.hide()
+        knife_timer.stop()
+        input_key(leading_roll, 0)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==11:
+        knife_timer.start()
+        input_key(leading_roll, 85)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==13:
+        byeonsung.show()
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==14:
+        input_key(yeomla, 82)
+
+    elif lh2_timeline_count==15:
+        input_key(yeomla, 0)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==18:
+        mom.show()
+
+    elif lh2_timeline_count==18:
+        input_key(leading_roll, 0)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==20:
+        taesan.setImage("캐릭터/태산대왕/우.png")
+        taesan.show()
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==23:
+        taesan.setImage("캐릭터/태산대왕/좌.png")
+        taesan.show()
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==24:
+        input_key(leading_roll, 0)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==30:
+        input_key(leading_roll, 85)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==32:
+        gangrim.state[2]=0
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==33:
+        gangrim.state[2]=1
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==36:
+        input_key(yeomla, 82)
+
+    elif lh2_timeline_count==37:
+        input_key(yeomla, 0)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==38:
+        input_key(yeomla, 0)
+        lh2_message.show()
+        lh2_animator.stop()
+
+    elif lh2_timeline_count==39:
+        mom.hide()
+
+    elif lh2_timeline_count==40:
+        lh2_message.show()
+        lh2_animator.stop()
+        input_key(leading_roll, 83)
+
+    elif lh2_timeline_count==41:
+        input_key(leading_roll, 85)
+
+    elif lh2_timeline_count==42:
+        ending.enter()
+
+    else:
+        lh2_message.show()
+        lh2_animator.stop()
+    lh2_timeline_count+=1    
+lh2_timeline.onTimeout=lh2_timeline_next
+
+lh2_animator.fade_in(0, 1)
+for i in range(1, 16):
+    lh2_animator.reserve(i, lh2_timeline)
+lh2_animator.reserve(18, lh2_timeline)
+for i in range(19, 40):
+    lh2_animator.reserve(i, lh2_timeline)
+lh2_animator.reserve(42, lh2_timeline)
+lh2_animator.reserve(43, lh2_timeline)
+lh2_animator.reserve(44, lh2_timeline)
+lh2_animator.reserve(46, lh2_timeline)
+lh2_animator.reserve(47, lh2_timeline)
+lh2_animator.reserve(48, lh2_timeline)
+lh2_animator.fade_out(47, 1)
+
+
+def lh2_onEnter():
+    global on_event
+
+    character_enter(lh2)
+    if not lh2.clear:
+        on_event=True
+        deoksoon.location[1]=80
+        gangrim.location[1]=65
+        leading_roll.location[1]=360
+        haewonmaek.location[1]=30
+        for self in [deoksoon, gangrim, leading_roll, haewonmaek, yeomla]:
+            self.location[0]=lh2
+            self.state[2]=1
+            self.shown=True
+            self.show()
+        byeonsung.locate(lh2, 840, 180)
+        byeonsung.hide()
+        yeomla.location[1]=1300
+        lh2_animator.start()
+lh2.self_set=lh2_onEnter
+
+ending=Scene("", "")
+end_title=["인트로/선과함께.png", "엔딩/동선과 함께.png"]
+end_title_count=0
+ending_title=Object(end_title[0])
+ending_title.locate(ending, 440, 300)
+ending_title.show()
+
+end_title_clk=Timer(0)
+def end_title_change():
+    global end_title_count
+    if end_title_count==0:
+        ending_title.setImage(end_title[1])
+        ending_title.locate(ending, 440, 0)
+        ending_title.show()
+        end_title_count+=1
+    else:
+        endGame()
+end_title_clk.onTimeout=end_title_change
+
+ending_animator=Animator(ending)
+ending_animator.light_off(0, 1)
+ending_animator.fade_out(2, 1)
+ending_animator.reserve(3, end_title_clk)
+ending_animator.fade_in(3, 1)
+ending_animator.fade_out(5, 2)
+ending_animator.light_off(7, 1)
+ending_animator.reserve(7, end_title_clk)
+
+def ending_onEnter():
+    ending_animator.start()
+ending.onEnter=ending_onEnter
 
 startGame(intro)
