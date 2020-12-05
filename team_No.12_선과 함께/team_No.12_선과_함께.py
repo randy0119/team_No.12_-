@@ -1272,6 +1272,7 @@ class Boss(Mob):
 
                 if self.on_hit and self.shown:
                     self.hit()
+                    self.bgm[0].stop()
                     self.bgm[0].play(0)
 
                 if self.life==0:
@@ -1677,4 +1678,4 @@ def ending_onEnter():
     ending_animator.start()
 ending.onEnter=ending_onEnter
 
-startGame(intro)
+startGame(lh1)
