@@ -26,6 +26,9 @@ class Character(Object):
         self.on_attack=False
         self.attack_count=0
         self.key=0
+        self.pt_bgm=Sound("캐릭터/Portal.mp3")
+        self.jp_bgm=Sound("캐릭터/Jump.mp3")
+        self.atk_bgm=Sound("캐릭터/Attack_0.mp3")
 
         self.motion_timer=Timer(0.03)
         self.motion_count=0
@@ -44,6 +47,7 @@ class Character(Object):
                     move_left(self)
                 elif self.key==217 and not self.on_rope:      ##공격
                     attack(self)
+                    self.atk_bgm.play(False)
                 elif self.key==219 and not self.on_rope:      ##점프
                     jump(self)
                 elif self.key==84:   ##사다리타기
@@ -69,7 +73,6 @@ class Character(Object):
             if self.control==True:
                 self.location[0].player_location[0]=self.location[1]
                 self.location[0].player_location[1]=self.location[2]
-                exam.set(self.location[1])##______________________test 추후 삭제 요망
             character_locate(self)
 
             self.motion_timer.set(0.03)
@@ -97,6 +100,7 @@ class Character(Object):
                 self.location[0].clear=True
                 target=self.location[0].portal(self.location[1], self.location[2])
                 target.enter()
+                self.pt_bgm.play(False)
             elif self.location[0].rope_signal(self.location[1], self.location[2]+10):      #사다리타기
                 self.y_speed=3
                 self.on_rope=True
@@ -142,6 +146,7 @@ class Character(Object):
 
         def jump(self):
             if not self.on_jump:
+                self.jp_bgm.play(False)
                 self.on_jump=True
                 self.y_speed=10
         
@@ -205,7 +210,7 @@ class Portal(Object):
         self.timer.start()
 
 class Stage(Scene):
-    def __init__(self, title, image, ground, next_x, next_y, before_x, before_y):
+    def __init__(self, title, image, ground, next_x, next_y, before_x, before_y, sound):
         super().__init__(title, image)
         self.ground_function=ground
         self.next_pt_location=[next_x, next_y]
@@ -223,11 +228,17 @@ class Stage(Scene):
         self.mob_list=[]
         self.kill_count=0
         self.kill_quest=0
+        self.bgm=sound
 
     def onEnter(self):
         character_enter(self)
         self.self_set()
+        self.bgm.play(True)
         super().onEnter()
+
+    def onLeave(self):
+        self.bgm.stop()
+        super().onLeave()
 
     def self_set(self):
         pass
@@ -266,6 +277,7 @@ class Message(Object):
         self.locate(scene, self.now_x, self.now_y)
         self.animator=animator
 
+        self.sound=Sound("캐릭터/BtMouseClick.mp3")
         self.count=0
         self.file_set=file_set
 
@@ -287,9 +299,10 @@ class Message(Object):
             self.count+=1
             self.setImage(self.file_set[self.count])
             self.animator.start()
+            self.sound.play(False)
 
 class Mob(Object):
-    def __init__(self, file_set, scene, x, y, right_lim, left_lim, dir, shown, control):    ##________(file_set) [0: 정지, 1:맞음, 2:죽음][0: 좌, 1: 우]
+    def __init__(self, file_set, scene, x, y, right_lim, left_lim, dir, shown, control, bgm):    ##________(file_set) [0: 정지, 1:맞음, 2:죽음][0: 좌, 1: 우]
         super().__init__(file_set[0][dir][0])
         self.locate(scene, x, y)
         if shown:
@@ -307,6 +320,7 @@ class Mob(Object):
         self.right_limit=right_lim
         self.left_limit=left_lim
         self.key=0
+        self.bgm=bgm
 
         self.location[0].mob_list.append(self)
 
@@ -321,6 +335,7 @@ class Mob(Object):
                 self.death_timer.start()
             else:
                 self.shown=False
+            character_locate(self)
         self.death_timer.onTimeout=death
 
         self.on_hit_timer=Timer(0.5)
@@ -354,8 +369,10 @@ class Mob(Object):
 
                 if self.on_hit and self.shown:
                     self.hit()
+                    self.bgm[0].play(0)
 
                 if self.life==0:
+                    self.bgm[1].play(0)
                     self.death_timer.start()
                     self.location[0].kill_count+=1
                     self.on_hit=False
@@ -459,7 +476,8 @@ def hellgate_1_ground(x, y):
     else:
         return 270
 
-hellgate_1=Stage("지옥문", "지옥문/1.png", hellgate_1_ground, 1137, 760-510, 0, 0)
+hellgate_bgm=Sound("bgm/HellGate.mp3")
+hellgate_1=Stage("지옥문", "지옥문/1.png", hellgate_1_ground, 1137, 760-510, 0, 0, hellgate_bgm)
 hellgate_1_animator=Animator(hellgate_1)
 hellgate_1_message=Message(hellgate_1, hellgate_1_animator, ["지옥문/대화 0.png", "지옥문/대화 1.png", "지옥문/대화 2.png","지옥문/대화 3.png","지옥문/대화 4.png","지옥문/대화 5.png","지옥문/대화 6.png", "지옥문/귀인이요.png", "end"])
 how_to_portal=Object("지옥문/방향키.png")
@@ -471,6 +489,8 @@ leading_roll=Character(leading_roll_file_set, hellgate_1, 210, 135, 0, 0, 0, Tru
 deoksoon=Character(deoksoon_file_set, hellgate_1, -100, 135, 0, 0, 0, True, False)
 haewonmaek=Character(haewonmaek_file_set, hellgate_1, -150, 135, 0, 0, 0, True, False)
 gangrim=Character(gangrim_file_set, hellgate_1, -170, 135, 0, 0, 0, True, False)
+gangrim.atk_bgm=Sound("캐릭터/Attack_2.mp3")
+haewonmaek.atk_bgm=Sound("캐릭터/Attack_1.mp3")
 
 control_character=leading_roll
 def control(character):
@@ -579,7 +599,7 @@ def hellgate_2_ground(x, y):
     else:
         return 130
 
-hellgate_2=Stage("지옥문", "지옥문/2.png", hellgate_2_ground, 1090, 760-630, 60, 250)
+hellgate_2=Stage("지옥문", "지옥문/2.png", hellgate_2_ground, 1090, 760-630, 60, 250, hellgate_bgm)
 hellgate_1.next_scene=hellgate_2
 hellgate_2.before_scene=hellgate_1
 hellgate_2_animator=Animator(hellgate_2)
@@ -661,15 +681,19 @@ stormfox_file_set=[[['몹/돌풍여우/디폴트/좌/Frame0.png', '몹/돌풍여
 def cheonryun_ground_1(x, y):
     return 130
 
-cheonryun_1=Stage("천륜지옥", "천륜지옥/스테이지0.png", cheonryun_ground_1, 1090, 110, 60, 110)
+cr_bgm=Sound("bgm/VerdelField.mp3")
+cheonryun_1=Stage("천륜지옥", "천륜지옥/스테이지0.png", cheonryun_ground_1, 1090, 110, 60, 110, cr_bgm)
 hellgate_2.next_scene=cheonryun_1
 cheonryun_1.before_scene=hellgate_2
 cr1_animator=Animator(cheonryun_1)
 cr1_message=Message(cheonryun_1, cr1_animator, ["천륜지옥/대화 0.png","천륜지옥/대화 1.png","천륜지옥/대화 2.png","천륜지옥/대화 3.png", "end"])
 
-sf_0=Mob(stormfox_file_set, cheonryun_1, 800, 130, 1200, 50, 0, False, False)
-sf_1=Mob(stormfox_file_set, cheonryun_1, 600, 130, 1200, 50, 0, False, False)
-sf_2=Mob(stormfox_file_set, cheonryun_1, 700, 130, 1200, 50, 0, False, False)
+sf_hit=Sound("몹/돌풍여우/Hit.mp3")
+sf_die=Sound("몹/돌풍여우/Die.mp3")
+sf_bgm=[sf_hit, sf_die]
+sf_0=Mob(stormfox_file_set, cheonryun_1, 800, 130, 1200, 50, 0, False, False, sf_bgm)
+sf_1=Mob(stormfox_file_set, cheonryun_1, 600, 130, 1200, 50, 0, False, False, sf_bgm)
+sf_2=Mob(stormfox_file_set, cheonryun_1, 700, 130, 1200, 50, 0, False, False, sf_bgm)
 
 cr1_timeline=Timer(0)
 cr1_timeline_count=0
@@ -750,14 +774,14 @@ def cheonryun_ground_2(x, y):
     else:
         return 50
 
-cheonryun_2=Stage("천륜지옥", "천륜지옥/스테이지1.png", cheonryun_ground_2, 1090, 30, 60, 30)
+cheonryun_2=Stage("천륜지옥", "천륜지옥/스테이지1.png", cheonryun_ground_2, 1090, 30, 60, 30, cr_bgm)
 cheonryun_1.next_scene=cheonryun_2
 cheonryun_2.before_scene=cheonryun_1
 
-sf_3=Mob(stormfox_file_set, cheonryun_2, 500, 50, 1200, 50, 0, True, True)
-sf_4=Mob(stormfox_file_set, cheonryun_2, 900, 50, 1200, 50, 0, True, True)
-sf_5=Mob(stormfox_file_set, cheonryun_2, 500, 260, 680, 420,  0, True, True)
-sf_6=Mob(stormfox_file_set, cheonryun_2, 900, 370, 1150, 740, 0, True, True)
+sf_3=Mob(stormfox_file_set, cheonryun_2, 500, 50, 1200, 50, 0, True, True, sf_bgm)
+sf_4=Mob(stormfox_file_set, cheonryun_2, 900, 50, 1200, 50, 0, True, True, sf_bgm)
+sf_5=Mob(stormfox_file_set, cheonryun_2, 500, 260, 680, 420,  0, True, True, sf_bgm)
+sf_6=Mob(stormfox_file_set, cheonryun_2, 900, 370, 1150, 740, 0, True, True, sf_bgm)
 
 cheonryun_2.rope_location.append([520, 60, 260])
 cheonryun_2.rope_location.append([950, 60, 370])
@@ -780,15 +804,15 @@ def cheonryun_ground_3(x, y):
     else:
         return 50
 
-cheonryun_3=Stage("천륜지옥", "천륜지옥/스테이지2.png", cheonryun_ground_3, 1090, 30, 60, 30)
+cheonryun_3=Stage("천륜지옥", "천륜지옥/스테이지2.png", cheonryun_ground_3, 1090, 30, 60, 30, cr_bgm)
 cheonryun_2.next_scene=cheonryun_3
 cheonryun_3.before_scene=cheonryun_2
 
-sf_7=Mob(stormfox_file_set, cheonryun_3, 540, 50, 1200, 50, 0, True, True)
-sf_8=Mob(stormfox_file_set, cheonryun_3, 800, 50, 1200, 50, 0, True, True)
-sf_9=Mob(stormfox_file_set, cheonryun_3, 90, 270, 540, 50, 0, True, True)
-sf_10=Mob(stormfox_file_set, cheonryun_3, 360, 270, 540, 50, 0, True, True)
-sf_11=Mob(stormfox_file_set, cheonryun_3, 800, 380, 1015, 585, 0, True, True)
+sf_7=Mob(stormfox_file_set, cheonryun_3, 540, 50, 1200, 50, 0, True, True, sf_bgm)
+sf_8=Mob(stormfox_file_set, cheonryun_3, 800, 50, 1200, 50, 0, True, True, sf_bgm)
+sf_9=Mob(stormfox_file_set, cheonryun_3, 90, 270, 540, 50, 0, True, True, sf_bgm)
+sf_10=Mob(stormfox_file_set, cheonryun_3, 360, 270, 540, 50, 0, True, True, sf_bgm)
+sf_11=Mob(stormfox_file_set, cheonryun_3, 800, 380, 1015, 585, 0, True, True, sf_bgm)
 
 cheonryun_3.rope_location.append([370, 60, 270])
 cheonryun_3.rope_location.append([725, 60, 380])
@@ -814,14 +838,17 @@ def cheonryun_ground_4(x, y):
     else:
         return 50
 
-cheonryun_4=Stage("천륜지옥", "천륜지옥/스테이지3.png", cheonryun_ground_4, 1090, 30, 60, 30)
+cheonryun_4=Stage("천륜지옥", "천륜지옥/스테이지3.png", cheonryun_ground_4, 1090, 30, 60, 30, cr_bgm)
 cheonryun_3.next_scene=cheonryun_4
 cheonryun_4.before_scene=cheonryun_3
 
-asf_0=Mob(asf_file_set, cheonryun_4, 450, 50, 1200, 50, 0, True, True)
-asf_1=Mob(asf_file_set, cheonryun_4, 720, 50, 1200, 50, 0, True, True)
-asf_2=Mob(asf_file_set, cheonryun_4, 1000, 50, 1200, 50, 0, True, True)
-asf_3=Mob(asf_file_set, cheonryun_4, 500, 350, 900, 480, 0, True, True)
+asf_hit=Sound("몹/사나운 돌풍여우/Hit.mp3")
+asf_die=Sound("몹/사나운 돌풍여우/Die (mp3cut.net).mp3")
+asf_bgm=[asf_hit, asf_die]
+asf_0=Mob(asf_file_set, cheonryun_4, 450, 50, 1200, 50, 0, True, True, asf_bgm)
+asf_1=Mob(asf_file_set, cheonryun_4, 720, 50, 1200, 50, 0, True, True, asf_bgm)
+asf_2=Mob(asf_file_set, cheonryun_4, 1000, 50, 1200, 50, 0, True, True, asf_bgm)
+asf_3=Mob(asf_file_set, cheonryun_4, 500, 350, 900, 480, 0, True, True, asf_bgm)
 
 cheonryun_4.rope_location.append([1185, 60, 420])
 cheonryun_4.rope_location.append([725, 60, 350])
@@ -840,14 +867,14 @@ def cheonryun_ground_5(x, y):
     else:
         return 50
 
-cheonryun_5=Stage("천륜지옥", "천륜지옥/스테이지4.png", cheonryun_ground_5, 1090, 30, 60, 30)
+cheonryun_5=Stage("천륜지옥", "천륜지옥/스테이지4.png", cheonryun_ground_5, 1090, 30, 60, 30, cr_bgm)
 cheonryun_4.next_scene=cheonryun_5
 cheonryun_5.before_scene=cheonryun_4
 
-asf_4=Mob(asf_file_set, cheonryun_5, 450, 50, 1200, 50, 0, True, True)
-asf_5=Mob(asf_file_set, cheonryun_5, 720, 50, 1200, 50, 0, True, True)
-asf_6=Mob(asf_file_set, cheonryun_5, 300, 360, 760, 200, 0, True, True)
-asf_7=Mob(asf_file_set, cheonryun_5, 600, 360, 760, 200, 0, True, True)
+asf_4=Mob(asf_file_set, cheonryun_5, 450, 50, 1200, 50, 0, True, True, asf_bgm)
+asf_5=Mob(asf_file_set, cheonryun_5, 720, 50, 1200, 50, 0, True, True, asf_bgm)
+asf_6=Mob(asf_file_set, cheonryun_5, 300, 360, 760, 200, 0, True, True, asf_bgm)
+asf_7=Mob(asf_file_set, cheonryun_5, 600, 360, 760, 200, 0, True, True, asf_bgm)
 
 cheonryun_5.rope_location.append([560, 60, 360])
 
@@ -866,7 +893,7 @@ def cheonryun_ground_6(x, y):
     else:
         return 50
 
-cheonryun_6=Stage("천륜지옥", "천륜지옥/배경1.png", cheonryun_ground_6, 1090, 30, 60, 30)
+cheonryun_6=Stage("천륜지옥", "천륜지옥/배경1.png", cheonryun_ground_6, 1090, 30, 60, 30, cr_bgm)
 cheonryun_5.next_scene=cheonryun_6
 cheonryun_6.before_scene=cheonryun_5
 cr6_animator=Animator(cheonryun_6)
@@ -896,6 +923,7 @@ def cr6_timeline_next():
     elif cr6_timeline_count==7:
         cheonryun_6.clear=True
         on_event=False
+        showMessage("다음 장소로 이동하세요")
         control(leading_roll)
 
     cr6_timeline_count+=1    
@@ -921,6 +949,9 @@ def cr6_onEnter():
         deoksoon.location[1]=400
         gangrim.location[1]=300
         haewonmaek.location[1]=250
+        input_key(yeomla, 0)
+        yeomla.state[2]=0
+        yeomla.location[1]=1040
         for self in [deoksoon, gangrim, leading_roll, haewonmaek]:
             self.location[0]=cheonryun_6
             self.location[2]=50
@@ -943,7 +974,8 @@ def md1_ground(x, y):
     else:
         return 160
 
-md1=Stage("살인지옥", "살인지옥/스테이지 0.png", md1_ground, 1110, 140, 40, 140)
+md_bgm=Sound("bgm/ThePartemRuins.mp3")
+md1=Stage("살인지옥", "살인지옥/스테이지 0.png", md1_ground, 1110, 140, 40, 140, md_bgm)
 cheonryun_6.next_scene=md1
 md1.before_scene=cheonryun_6
 md1_animator=Animator(md1)
@@ -954,11 +986,14 @@ md1.rope_location.append([948, 170, 530])
 md1.rope_location.append([110, 350, 645])
 md1.rope_location.append([440, 350, 530])
 
-def_0=Mob(def_file_set, md1, 800, 170, 1200, 50, 0, False, False)
-def_1=Mob(def_file_set, md1, 300, 350, 460, 50, 1, False, False)
-def_2=Mob(def_file_set, md1, 600, 540, 1080, 365, 0, False, False)
-def_3=Mob(def_file_set, md1, 950, 540, 1080, 365, 0, False, False)
-def_4=Mob(def_file_set, md1, 300, 170, 1200, 50, 1, False, False)
+def_hit=Sound("몹/방패병/Hit.mp3")
+def_die=Sound("몹/방패병/Die.mp3")
+def_bgm=[def_hit, def_die]
+def_0=Mob(def_file_set, md1, 800, 170, 1200, 50, 0, False, False, def_bgm)
+def_1=Mob(def_file_set, md1, 300, 350, 460, 50, 1, False, False, def_bgm)
+def_2=Mob(def_file_set, md1, 600, 540, 1080, 365, 0, False, False, def_bgm)
+def_3=Mob(def_file_set, md1, 950, 540, 1080, 365, 0, False, False, def_bgm)
+def_4=Mob(def_file_set, md1, 300, 170, 1200, 50, 1, False, False, def_bgm)
 
 md1_timeline=Timer(0)
 md1_timeline_count=0
@@ -1055,7 +1090,7 @@ def md2_ground(x, y):
     else:
         return 130
 
-md2=Stage("살인지옥", "살인지옥/스테이지 1.png", md2_ground, 1110, 110, 40, 110)
+md2=Stage("살인지옥", "살인지옥/스테이지 1.png", md2_ground, 1110, 110, 40, 110, md_bgm)
 md1.next_scene=md2
 md2.before_scene=md1
 md2_animator=Animator(md2)
@@ -1066,10 +1101,10 @@ md2.rope_location.append([325, 320, 595])
 md2.rope_location.append([630, 370, 575])
 md2.rope_location.append([1090, 270, 575])
 
-def_5=Mob(def_file_set, md2, 400, 130, 1200, 50, 0, True, True)
-def_6=Mob(def_file_set, md2, 800, 130, 1200, 50, 0, True, True)
-def_7=Mob(def_file_set, md2, 700, 375, 1070, 360, 0, True, True)
-def_8=Mob(def_file_set, md2, 1000, 575, 1200, 580, 0, True, True)
+def_5=Mob(def_file_set, md2, 400, 130, 1200, 50, 0, True, True, def_bgm)
+def_6=Mob(def_file_set, md2, 800, 130, 1200, 50, 0, True, True, def_bgm)
+def_7=Mob(def_file_set, md2, 700, 375, 1070, 360, 0, True, True, def_bgm)
+def_8=Mob(def_file_set, md2, 1000, 575, 1200, 580, 0, True, True, def_bgm)
 
 def md2_onEnter():
     global on_event
@@ -1090,7 +1125,7 @@ def md3_ground(x, y):
     else:
         return 130
 
-md3=Stage("살인지옥", "살인지옥/스테이지 2.png", md3_ground, 1110, 110, 40, 110)
+md3=Stage("살인지옥", "살인지옥/스테이지 2.png", md3_ground, 1110, 110, 40, 110, md_bgm)
 md2.next_scene=md3
 md3.before_scene=md2
 md3_animator=Animator(md3)
@@ -1099,11 +1134,14 @@ md3.rope_location.append([480, 140, 310])
 md3.rope_location.append([535, 320, 505])
 md3.rope_location.append([235, 330, 620])
 
-atk_1=Mob(atk_file_set, md3, 450, 130, 1200, 50, 0, True, True)
-atk_2=Mob(atk_file_set, md3, 850, 130, 1200, 50, 0, True, True)
-atk_3=Mob(atk_file_set, md3, 300, 310, 1030, 100, 0, True, True)
-atk_4=Mob(atk_file_set, md3, 700, 310, 1030, 100, 0, True, True)
-atk_5=Mob(atk_file_set, md3, 500, 505, 765, 255, 0, True, True)
+atk_hit=Sound("몹/공격병/Hit.mp3")
+atk_die=Sound("몹/공격병/Die.mp3")
+atk_bgm=[atk_hit, atk_die]
+atk_1=Mob(atk_file_set, md3, 450, 130, 1200, 50, 0, True, True, atk_bgm)
+atk_2=Mob(atk_file_set, md3, 850, 130, 1200, 50, 0, True, True, atk_bgm)
+atk_3=Mob(atk_file_set, md3, 300, 310, 1030, 100, 0, True, True, atk_bgm)
+atk_4=Mob(atk_file_set, md3, 700, 310, 1030, 100, 0, True, True, atk_bgm)
+atk_5=Mob(atk_file_set, md3, 500, 505, 765, 255, 0, True, True, atk_bgm)
 
 def md3_onEnter():
     global on_event
@@ -1116,7 +1154,7 @@ md3.self_set=md3_onEnter
 def md4_ground(x, y):
         return 60
 
-md4=Stage("살인지옥", "살인지옥/배경1.png", md4_ground, 1110, 40, 40, 40)
+md4=Stage("살인지옥", "살인지옥/배경1.png", md4_ground, 1110, 40, 40, 40, md_bgm)
 md3.next_scene=md4
 md4.before_scene=md3
 md4_animator=Animator(md4)
@@ -1193,14 +1231,14 @@ def md4_onEnter():
             self.location[0]=md4
             self.location[2]=50
             self.state[2]=1
-            self.show()
+            self.shown=True
         input_key(leading_roll, 85)
         md4_animator.start()
 md4.self_set=md4_onEnter
 ###________________________________________________________________________________________살인지옥4/거짓지옥1
 class Boss(Mob):
-    def __init__(self, file_set, scene, x, y, right_lim, left_lim, dir, shown, control):
-        super().__init__(file_set, scene, x, y, right_lim, left_lim, dir, shown, control)
+    def __init__(self, file_set, scene, x, y, right_lim, left_lim, dir, shown, control, bgm):
+        super().__init__(file_set, scene, x, y, right_lim, left_lim, dir, shown, control, bgm)
 
         self.life=15
 
@@ -1234,8 +1272,10 @@ class Boss(Mob):
 
                 if self.on_hit and self.shown:
                     self.hit()
+                    self.bgm[0].play(0)
 
                 if self.life==0:
+                    self.bgm[1].play(0)
                     self.death_timer.start()
                     self.location[0].kill_count+=1
                     self.location[2]-=30
@@ -1283,8 +1323,8 @@ class Boss(Mob):
 bellum_file_set=[[['몹/벨룸/디폴트/좌/Frame0.png', '몹/벨룸/디폴트/좌/Frame1.png', '몹/벨룸/디폴트/좌/Frame2.png', '몹/벨룸/디폴트/좌/Frame3.png', '몹/벨룸/디폴트/좌/Frame4.png', '몹/벨룸/디폴트/좌/Frame5.png', '몹/벨룸/디폴트/좌/Frame6.png', '몹/벨룸/디폴트/좌/Frame7.png', '몹/벨룸/디폴트/좌/Frame8.png', '몹/벨룸/디폴트/좌/Frame9.png', '몹/벨룸/디폴트/좌/Frame10.png', '몹/벨룸/디폴트/좌/Frame11.png', '몹/벨룸/디폴트/좌/Frame12.png', '몹/벨룸/디폴트/좌/Frame13.png', '몹/벨룸/디폴트/좌/Frame14.png', '몹/벨룸/디폴트/좌/Frame15.png', '몹/벨룸/디폴트/좌/Frame16.png', '몹/벨룸/디폴트/좌/Frame17.png', '몹/벨룸/디폴트/좌/Frame18.png', '몹/벨룸/디폴트/좌/Frame19.png', '몹/벨룸/디폴트/좌/Frame20.png', '몹/벨룸/디폴트/좌/Frame21.png', '몹/벨룸/디폴트/좌/Frame22.png', '몹/벨룸/디폴트/좌/Frame23.png'],['몹/벨룸/디폴트/우/Frame0.png', '몹/벨룸/디폴트/우/Frame1.png', '몹/벨룸/디폴트/우/Frame2.png', '몹/벨룸/디폴트/우/Frame3.png', '몹/벨룸/디폴트/우/Frame4.png', '몹/벨룸/디폴트/우/Frame5.png', '몹/벨룸/디폴트/우/Frame6.png', '몹/벨룸/디폴트/우/Frame7.png', '몹/벨룸/디폴트/우/Frame8.png', '몹/벨룸/디폴트/우/Frame9.png', '몹/벨룸/디폴트/우/Frame10.png', '몹/벨룸/디폴트/우/Frame11.png', '몹/벨룸/디폴트/우/Frame12.png', '몹/벨룸/디폴트/우/Frame13.png', '몹/벨룸/디폴트/우/Frame14.png', '몹/벨룸/디폴트/우/Frame15.png', '몹/벨룸/디폴트/우/Frame16.png', '몹/벨룸/디폴트/우/Frame17.png', '몹/벨룸/디폴트/우/Frame18.png', '몹/벨룸/디폴트/우/Frame19.png', '몹/벨룸/디폴트/우/Frame20.png', '몹/벨룸/디폴트/우/Frame21.png', '몹/벨룸/디폴트/우/Frame22.png', '몹/벨룸/디폴트/우/Frame23.png']],[['몹/벨룸/맞음/좌/hit.png'],['몹/벨룸/맞음/우/hit.png']],[['몹/벨룸/죽음/좌/Frame0.png', '몹/벨룸/죽음/좌/Frame1.png', '몹/벨룸/죽음/좌/Frame2.png', '몹/벨룸/죽음/좌/Frame3.png', '몹/벨룸/죽음/좌/Frame4.png', '몹/벨룸/죽음/좌/Frame5.png', '몹/벨룸/죽음/좌/Frame6.png', '몹/벨룸/죽음/좌/Frame7.png', '몹/벨룸/죽음/좌/Frame8.png', '몹/벨룸/죽음/좌/Frame9.png', '몹/벨룸/죽음/좌/Frame10.png', '몹/벨룸/죽음/좌/Frame11.png', '몹/벨룸/죽음/좌/Frame12.png', '몹/벨룸/죽음/좌/Frame13.png', '몹/벨룸/죽음/좌/Frame14.png', '몹/벨룸/죽음/좌/Frame15.png', '몹/벨룸/죽음/좌/Frame16.png', '몹/벨룸/죽음/좌/Frame17.png', '몹/벨룸/죽음/좌/Frame18.png', '몹/벨룸/죽음/좌/Frame19.png', '몹/벨룸/죽음/좌/Frame20.png', '몹/벨룸/죽음/좌/Frame21.png', '몹/벨룸/죽음/좌/Frame22.png', '몹/벨룸/죽음/좌/Frame23.png', '몹/벨룸/죽음/좌/Frame24.png', '몹/벨룸/죽음/좌/Frame25.png', '몹/벨룸/죽음/좌/Frame26.png', '몹/벨룸/죽음/좌/Frame27.png', '몹/벨룸/죽음/좌/Frame28.png', '몹/벨룸/죽음/좌/Frame29.png', '몹/벨룸/죽음/좌/Frame30.png', '몹/벨룸/죽음/좌/Frame31.png', '몹/벨룸/죽음/좌/Frame32.png', '몹/벨룸/죽음/좌/Frame33.png', '몹/벨룸/죽음/좌/Frame34.png', '몹/벨룸/죽음/좌/Frame35.png', '몹/벨룸/죽음/좌/Frame36.png', '몹/벨룸/죽음/좌/Frame37.png', '몹/벨룸/죽음/좌/Frame38.png', '몹/벨룸/죽음/좌/Frame39.png', '몹/벨룸/죽음/좌/Frame40.png', '몹/벨룸/죽음/좌/Frame41.png', '몹/벨룸/죽음/좌/Frame42.png', '몹/벨룸/죽음/좌/Frame43.png', '몹/벨룸/죽음/좌/Frame44.png', '몹/벨룸/죽음/좌/Frame45.png', '몹/벨룸/죽음/좌/Frame46.png', '몹/벨룸/죽음/좌/Frame47.png', '몹/벨룸/죽음/좌/Frame48.png', '몹/벨룸/죽음/좌/Frame49.png', '몹/벨룸/죽음/좌/Frame50.png', '몹/벨룸/죽음/좌/Frame51.png', '몹/벨룸/죽음/좌/Frame52.png', '몹/벨룸/죽음/좌/Frame53.png', '몹/벨룸/죽음/좌/Frame54.png', '몹/벨룸/죽음/좌/Frame55.png', '몹/벨룸/죽음/좌/Frame56.png', '몹/벨룸/죽음/좌/Frame57.png', '몹/벨룸/죽음/좌/Frame58.png'],['몹/벨룸/죽음/우/Frame0.png', '몹/벨룸/죽음/우/Frame1.png', '몹/벨룸/죽음/우/Frame2.png', '몹/벨룸/죽음/우/Frame3.png', '몹/벨룸/죽음/우/Frame4.png', '몹/벨룸/죽음/우/Frame5.png', '몹/벨룸/죽음/우/Frame6.png', '몹/벨룸/죽음/우/Frame7.png', '몹/벨룸/죽음/우/Frame8.png', '몹/벨룸/죽음/우/Frame9.png', '몹/벨룸/죽음/우/Frame10.png', '몹/벨룸/죽음/우/Frame11.png', '몹/벨룸/죽음/우/Frame12.png', '몹/벨룸/죽음/우/Frame13.png', '몹/벨룸/죽음/우/Frame14.png', '몹/벨룸/죽음/우/Frame15.png', '몹/벨룸/죽음/우/Frame16.png', '몹/벨룸/죽음/우/Frame17.png', '몹/벨룸/죽음/우/Frame18.png', '몹/벨룸/죽음/우/Frame19.png', '몹/벨룸/죽음/우/Frame20.png', '몹/벨룸/죽음/우/Frame21.png', '몹/벨룸/죽음/우/Frame22.png', '몹/벨룸/죽음/우/Frame23.png', '몹/벨룸/죽음/우/Frame24.png', '몹/벨룸/죽음/우/Frame25.png', '몹/벨룸/죽음/우/Frame26.png', '몹/벨룸/죽음/우/Frame27.png', '몹/벨룸/죽음/우/Frame28.png', '몹/벨룸/죽음/우/Frame29.png', '몹/벨룸/죽음/우/Frame30.png', '몹/벨룸/죽음/우/Frame31.png', '몹/벨룸/죽음/우/Frame32.png', '몹/벨룸/죽음/우/Frame33.png', '몹/벨룸/죽음/우/Frame34.png', '몹/벨룸/죽음/우/Frame35.png', '몹/벨룸/죽음/우/Frame36.png', '몹/벨룸/죽음/우/Frame37.png', '몹/벨룸/죽음/우/Frame38.png', '몹/벨룸/죽음/우/Frame39.png', '몹/벨룸/죽음/우/Frame40.png', '몹/벨룸/죽음/우/Frame41.png', '몹/벨룸/죽음/우/Frame42.png', '몹/벨룸/죽음/우/Frame43.png', '몹/벨룸/죽음/우/Frame44.png', '몹/벨룸/죽음/우/Frame45.png', '몹/벨룸/죽음/우/Frame46.png', '몹/벨룸/죽음/우/Frame47.png', '몹/벨룸/죽음/우/Frame48.png', '몹/벨룸/죽음/우/Frame49.png', '몹/벨룸/죽음/우/Frame50.png', '몹/벨룸/죽음/우/Frame51.png', '몹/벨룸/죽음/우/Frame52.png', '몹/벨룸/죽음/우/Frame53.png', '몹/벨룸/죽음/우/Frame54.png', '몹/벨룸/죽음/우/Frame55.png', '몹/벨룸/죽음/우/Frame56.png', '몹/벨룸/죽음/우/Frame57.png', '몹/벨룸/죽음/우/Frame58.png']],[['몹/벨룸/이동/우/Frame0.png', '몹/벨룸/이동/우/Frame1.png', '몹/벨룸/이동/우/Frame2.png', '몹/벨룸/이동/우/Frame3.png', '몹/벨룸/이동/우/Frame4.png', '몹/벨룸/이동/우/Frame5.png', '몹/벨룸/이동/우/Frame6.png', '몹/벨룸/이동/우/Frame7.png', '몹/벨룸/이동/우/Frame8.png', '몹/벨룸/이동/우/Frame9.png'],['몹/벨룸/이동/좌/Frame0.png', '몹/벨룸/이동/좌/Frame1.png', '몹/벨룸/이동/좌/Frame2.png', '몹/벨룸/이동/좌/Frame3.png', '몹/벨룸/이동/좌/Frame4.png', '몹/벨룸/이동/좌/Frame5.png', '몹/벨룸/이동/좌/Frame6.png', '몹/벨룸/이동/좌/Frame7.png', '몹/벨룸/이동/좌/Frame8.png', '몹/벨룸/이동/좌/Frame9.png']],[['몹/벨룸/등장/좌/Frame0.png', '몹/벨룸/등장/좌/Frame1.png', '몹/벨룸/등장/좌/Frame2.png', '몹/벨룸/등장/좌/Frame3.png', '몹/벨룸/등장/좌/Frame4.png', '몹/벨룸/등장/좌/Frame5.png', '몹/벨룸/등장/좌/Frame6.png', '몹/벨룸/등장/좌/Frame7.png', '몹/벨룸/등장/좌/Frame8.png', '몹/벨룸/등장/좌/Frame9.png', '몹/벨룸/등장/좌/Frame10.png', '몹/벨룸/등장/좌/Frame11.png', '몹/벨룸/등장/좌/Frame12.png', '몹/벨룸/등장/좌/Frame13.png', '몹/벨룸/등장/좌/Frame14.png', '몹/벨룸/등장/좌/Frame15.png', '몹/벨룸/등장/좌/Frame16.png', '몹/벨룸/등장/좌/Frame17.png', '몹/벨룸/등장/좌/Frame18.png', '몹/벨룸/등장/좌/Frame19.png', '몹/벨룸/등장/좌/Frame20.png'],['몹/벨룸/등장/우/Frame0.png', '몹/벨룸/등장/우/Frame1.png', '몹/벨룸/등장/우/Frame2.png', '몹/벨룸/등장/우/Frame3.png', '몹/벨룸/등장/우/Frame4.png', '몹/벨룸/등장/우/Frame5.png', '몹/벨룸/등장/우/Frame6.png', '몹/벨룸/등장/우/Frame7.png', '몹/벨룸/등장/우/Frame8.png', '몹/벨룸/등장/우/Frame9.png', '몹/벨룸/등장/우/Frame10.png', '몹/벨룸/등장/우/Frame11.png', '몹/벨룸/등장/우/Frame12.png', '몹/벨룸/등장/우/Frame13.png', '몹/벨룸/등장/우/Frame14.png', '몹/벨룸/등장/우/Frame15.png', '몹/벨룸/등장/우/Frame16.png', '몹/벨룸/등장/우/Frame17.png', '몹/벨룸/등장/우/Frame18.png', '몹/벨룸/등장/우/Frame19.png', '몹/벨룸/등장/우/Frame20.png']],[['몹/벨룸/숨기/좌/Frame21.png', '몹/벨룸/숨기/좌/Frame22.png', '몹/벨룸/숨기/좌/Frame23.png', '몹/벨룸/숨기/좌/Frame24.png', '몹/벨룸/숨기/좌/Frame25.png', '몹/벨룸/숨기/좌/Frame26.png', '몹/벨룸/숨기/좌/Frame27.png', '몹/벨룸/숨기/좌/Frame28.png', '몹/벨룸/숨기/좌/Frame29.png', '몹/벨룸/숨기/좌/Frame30.png', '몹/벨룸/숨기/좌/Frame31.png', '몹/벨룸/숨기/좌/Frame32.png'],['몹/벨룸/숨기/우/Frame21.png', '몹/벨룸/숨기/우/Frame22.png', '몹/벨룸/숨기/우/Frame23.png', '몹/벨룸/숨기/우/Frame24.png', '몹/벨룸/숨기/우/Frame25.png', '몹/벨룸/숨기/우/Frame26.png', '몹/벨룸/숨기/우/Frame27.png', '몹/벨룸/숨기/우/Frame28.png', '몹/벨룸/숨기/우/Frame29.png', '몹/벨룸/숨기/우/Frame30.png', '몹/벨룸/숨기/우/Frame31.png', '몹/벨룸/숨기/우/Frame32.png']]]
 
 class BossStage(Stage):
-    def __init__(self, title, image, ground, next_x, next_y, before_x, before_y):
-        super().__init__(title, image, ground, next_x, next_y, before_x, before_y)
+    def __init__(self, title, image, ground, next_x, next_y, before_x, before_y, sound):
+        super().__init__(title, image, ground, next_x, next_y, before_x, before_y, sound)
 
     def hit_signal(self, x, y, dir):
         hit=[[x+(-1)*(200-(150*dir)) , x+dir*200], [y-50, y+100]]
@@ -1295,12 +1335,17 @@ class BossStage(Stage):
 def lh1_ground(x, y):
         return 120
 
-lh1=BossStage("거짓지옥", "거짓지옥/스테이지 0.png", lh1_ground, 1110, 100, 40, 100)
+lh1_bgm=Sound("bgm/AbyssCave.mp3")
+lh1=BossStage("거짓지옥", "거짓지옥/스테이지 0.png", lh1_ground, 1110, 100, 40, 100, lh1_bgm)
 md4.next_scene=lh1
 lh1.before_scene=md4
 lh1_animator=Animator(lh1)
 lh1_message=Message(lh1, lh1_animator, ["거짓지옥/대화 1.png", "거짓지옥/대화 2.png",  "거짓지옥/대화 3.png", "거짓지옥/대화 4.png", "거짓지옥/대화 5.png","거짓지옥/대화 6.png","거짓지옥/대화 7.png","거짓지옥/대화 8.png", "end"])
-bellum=Boss(bellum_file_set, lh1, 800, 110, 1000, 0, 0, False, False)
+
+bl_hit=Sound("몹/벨룸/Hit.mp3")
+bl_die=Sound("몹/벨룸/Die.mp3")
+bl_bgm=[bl_hit, bl_die]
+bellum=Boss(bellum_file_set, lh1, 800, 110, 1000, 0, 0, False, False, bl_bgm)
 
 lh1_timeline=Timer(0)
 lh1_timeline_count=0
@@ -1402,8 +1447,9 @@ def lh2_ground(x, y):
     else:
         return 60
 
+lh2_bgm=Sound("bgm/YggdrasilPrayer.mp3")
 lh2_message_file=['거짓지옥/재판/대화0.png', '거짓지옥/재판/대화1.png', '거짓지옥/재판/대화2.png', '거짓지옥/재판/대화3.png', '거짓지옥/재판/대화4.png', '거짓지옥/재판/대화5.png', '거짓지옥/재판/대화6.png', '거짓지옥/재판/대화7.png', '거짓지옥/재판/대화8.png', '거짓지옥/재판/대화9.png', '거짓지옥/재판/대화10.png', '거짓지옥/재판/대화11.png', '거짓지옥/재판/대화12.png', '거짓지옥/재판/대화13.png', '거짓지옥/재판/대화14.png', '거짓지옥/재판/대화15.png', '거짓지옥/재판/대화16.png', '거짓지옥/재판/대화17.png', '거짓지옥/재판/대화18.png', '거짓지옥/재판/대화19.png', '거짓지옥/재판/대화20.png', '거짓지옥/재판/대화21.png', '거짓지옥/재판/대화22.png', '거짓지옥/재판/대화23.png', '거짓지옥/재판/대화24.png', '거짓지옥/재판/대화25.png', '거짓지옥/재판/대화26.png', '거짓지옥/재판/대화27.png', '거짓지옥/재판/대화28.png', '거짓지옥/재판/대화29.png', '거짓지옥/재판/대화30.png', '거짓지옥/재판/대화31.png', '거짓지옥/재판/대화32.png', '거짓지옥/재판/대화33.png', '거짓지옥/재판/대화34.png', '거짓지옥/재판/대화35.png', 'end']
-lh2=Stage("거짓지옥", "거짓지옥/배경1.png", lh2_ground, -1110, 100, 40, -800)
+lh2=Stage("거짓지옥", "거짓지옥/배경1.png", lh2_ground, -1110, 100, 40, -800, lh2_bgm)
 lh1.next_scene=lh2
 lh2.before_scene=lh1
 lh2_animator=Animator(lh2)
@@ -1601,27 +1647,31 @@ end_title_count=0
 ending_title=Object(end_title[0])
 ending_title.locate(ending, 440, 300)
 ending_title.show()
+end_bgm=Sound("엔딩/Evil-crack-03.mp3")
 
 end_title_clk=Timer(0)
 def end_title_change():
     global end_title_count
     if end_title_count==0:
+        end_bgm.play(False)
+    elif end_title_count==1:
         ending_title.setImage(end_title[1])
         ending_title.locate(ending, 440, 0)
         ending_title.show()
-        end_title_count+=1
     else:
         endGame()
+    end_title_count+=1
 end_title_clk.onTimeout=end_title_change
 
 ending_animator=Animator(ending)
 ending_animator.light_off(0, 1)
+ending_animator.reserve(1, end_title_clk)
 ending_animator.fade_out(2, 1)
 ending_animator.reserve(3, end_title_clk)
 ending_animator.fade_in(3, 1)
-ending_animator.fade_out(5, 2)
-ending_animator.light_off(7, 1)
-ending_animator.reserve(7, end_title_clk)
+ending_animator.fade_out(6, 2)
+ending_animator.light_off(8, 1)
+ending_animator.reserve(8, end_title_clk)
 
 def ending_onEnter():
     ending_animator.start()
