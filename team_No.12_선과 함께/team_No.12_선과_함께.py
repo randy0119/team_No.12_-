@@ -232,9 +232,9 @@ class Stage(Scene):
 
     def onEnter(self):
         character_enter(self)
-        self.self_set()
         self.bgm.play(True)
         super().onEnter()
+        self.self_set()
 
     def onLeave(self):
         self.bgm.stop()
@@ -952,6 +952,7 @@ def cr6_onEnter():
         input_key(yeomla, 0)
         yeomla.state[2]=0
         yeomla.location[1]=1040
+        yeomla.location[2]=280
         for self in [deoksoon, gangrim, leading_roll, haewonmaek]:
             self.location[0]=cheonryun_6
             self.location[2]=50
@@ -1003,6 +1004,10 @@ def md1_timeline_next():
     global on_event
 
     if md1_timeline_count==0:
+        gangrim.state[2]=0
+        deoksoon.state[2]=0
+        haewonmaek.state[2]=1
+        leading_roll.state[2]=1
         for self in [gangrim, leading_roll, haewonmaek, deoksoon]:
             input_key(self, 0)
         md1_message.show()
@@ -1064,10 +1069,6 @@ def md1_onEnter():
         gangrim.location[1]=670
         leading_roll.location[1]=500
         haewonmaek.location[1]=430
-        gangrim.state[2]=0
-        deoksoon.state[2]=0
-        haewonmaek.state[2]=1
-        leading_roll.state[2]=1
         for self in [deoksoon, gangrim, leading_roll, haewonmaek]:
             self.location[0]=md1
             self.location[2]=160
@@ -1639,6 +1640,7 @@ def lh2_onEnter():
         byeonsung.locate(lh2, 840, 180)
         byeonsung.hide()
         yeomla.location[1]=1300
+        yeomla.location[2]=180
         lh2_animator.start()
 lh2.self_set=lh2_onEnter
 
@@ -1678,4 +1680,4 @@ def ending_onEnter():
     ending_animator.start()
 ending.onEnter=ending_onEnter
 
-startGame(lh1)
+startGame(intro)
